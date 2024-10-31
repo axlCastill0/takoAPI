@@ -10,6 +10,6 @@ try {
 		db: Deno.env.get("beaver_db"),
 		password: Deno.env.get("beaver_pw"),
 	});
-} catch {
-	console.log("mistakes were made");
+} catch (error) {
+	throw new ErrorEvent(String(error));
 }
