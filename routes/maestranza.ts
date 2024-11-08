@@ -18,3 +18,11 @@ maeRouter.get(
 		res.send(product);
 	}
 );
+
+maeRouter.post(
+	"/products",
+	async (req: express.Request, res: express.Response) => {
+		const product = await mae.insertProduct(req.body);
+		res.send(product);
+	}
+);
