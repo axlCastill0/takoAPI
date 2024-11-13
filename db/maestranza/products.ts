@@ -4,19 +4,21 @@ type Product = {
 	id: number;
 	name: string;
 	category: string;
-	pictures: string;
 	description: string;
+	imageIds: string;
 };
 
 export async function getProducts() {
 	try {
-		const response = await client.query("SELECT * FROM mae_products");
+		const response = await client.query(
+			"SELECT prod.*, GROUP_CONCAT(pics.image_id) as imageIds FROM mae_products prod LEFT JOIN mae_prod_images pics ON prod.id = pics.product_id GROUP BY prod.id"
+		);
 		const products = response.map((product: Product) => ({
 			id: product.id,
 			name: product.name,
 			category: product.category,
-			pictures: product.pictures,
 			description: product.description,
+			imageIds: product.imageIds ? product.imageIds.split(",").map(Number) : [],
 		}));
 		return products;
 	} catch (error) {
@@ -28,15 +30,15 @@ export async function getProducts() {
 export async function getProductById(id: number) {
 	try {
 		const response = await client.query(
-			"SELECT * FROM mae_products WHERE id = ?",
+			"SELECT prod.*, GROUP_CONCAT(pics.image_id) as imageIds FROM mae_products prod LEFT JOIN mae_prod_images pics ON prod.id = pics.product_id WHERE prod.id = ? GROUP BY prod.id",
 			[id]
 		);
 		const product = response.map((product: Product) => ({
 			id: product.id,
 			name: product.name,
 			category: product.category,
-			pictures: product.pictures,
 			description: product.description,
+			imageIds: product.imageIds ? product.imageIds.split(",").map(Number) : [],
 		}));
 		return product;
 	} catch (error) {
@@ -47,9 +49,9 @@ export async function getProductById(id: number) {
 
 export async function insertProduct(product: Product) {
 	try {
-		const response = await client.execute(
+		await client.execute(
 			"INSERT INTO mae_products (name, category, pictures, description) VALUES (?, ?, ?, ?)",
-			[product.name, product.category, product.pictures, product.description]
+			[product.name, product.category, product.description]
 		);
 		return { message: "Product inserted successfully" };
 	} catch (error) {
