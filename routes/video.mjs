@@ -14,7 +14,7 @@ vidRouter.get("/:folder/:videoFile", async (req, res) => {
 	}
 
 	// Construct the file path securely
-	const videoPath = path.join(process.cwd(), "video", folder, videoFile);
+	const videoPath = path.join(process.cwd(), "storage", folder, videoFile);
 
 	// Check if file exists
 	if (!fs.existsSync(videoPath)) {
