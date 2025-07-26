@@ -5,13 +5,8 @@ import process from "process";
 
 export const vidRouter = express.Router();
 
-vidRouter.get("/:folder/:videoFile", async (req, res) => {
+vidRouter.get("/:folder/:videoFile", (req, res) => {
 	const { folder, videoFile } = req.params;
-	const range = req.headers.range;
-
-	if (!range) {
-		return res.status(400).send("Requires Range header");
-	}
 
 	// Construct the file path securely
 	const videoPath = path.join(process.cwd(), "storage", folder, videoFile);
@@ -24,24 +19,12 @@ vidRouter.get("/:folder/:videoFile", async (req, res) => {
 	const stat = fs.statSync(videoPath);
 	const fileSize = stat.size;
 
-	const parts = range.replace(/bytes=/, "").split("-");
-	const start = parseInt(parts[0], 10);
-	const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-
-	if (start >= fileSize || end >= fileSize) {
-		return res.status(416).send("Requested range not satisfiable");
-	}
-
-	const contentLength = end - start + 1;
-	const headers = {
-		"Content-Range": `bytes ${start}-${end}/${fileSize}`,
-		"Accept-Ranges": "bytes",
-		"Content-Length": contentLength,
+	res.writeHead(200, {
+		"Content-Length": fileSize,
 		"Content-Type": "video/mp4",
-	};
+		"Accept-Ranges": "none",
+	});
 
-	res.writeHead(206, headers);
-
-	const stream = fs.createReadStream(videoPath, { start, end });
+	const stream = fs.createReadStream(videoPath);
 	stream.pipe(res);
 });
